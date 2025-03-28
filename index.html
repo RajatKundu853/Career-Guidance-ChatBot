@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Chatbot</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+        body { 
+            font-family: 'Orbitron', sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #0a0f1a, #002244, #00f7ff); 
+            color: #00f7ff; 
+            cursor: url('cursor.png'), auto;
+            position: relative;
+        }
+        #logo {
+            width: 120px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            box-shadow: 0px 0px 15px rgba(0, 247, 255, 0.6);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #darkModeToggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            border: none;
+            background-color: #00f7ff;
+            color: #0a0f1a;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0px 0px 8px rgba(0, 247, 255, 0.6);
+        }
+        #chatbox { 
+            width: 50%; 
+            margin: auto; 
+            background: rgba(0, 0, 0, 0.8); 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0px 0px 20px rgba(0, 247, 255, 0.6);
+            border: 1px solid #00f7ff;
+            overflow-y: auto;
+            max-height: 400px;
+            margin-bottom: 30px;
+        }
+        .chat-message {
+            text-align: left;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .user-message {
+            background: #00f7ff;
+            color: #0a0f1a;
+            text-align: right;
+        }
+        .bot-message {
+            background: #1a1f2b;
+            color: #00f7ff;
+            font-family: Arial, sans-serif; /* Standard font for bot reply */
+        }
+        #userInput { 
+            width: 60%; 
+            padding: 10px; 
+            border: 1px solid #00f7ff; 
+            border-radius: 5px; 
+            background-color: #1a1f2b; 
+            color: #00f7ff; 
+            box-shadow: 0px 0px 8px rgba(0, 247, 255, 0.6);
+        }
+        #sendBtn, #voiceBtn { 
+            padding: 10px; 
+            border: none; 
+            background-color: #00f7ff; 
+            color: #0a0f1a; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: bold;
+            box-shadow: 0px 0px 8px rgba(0, 247, 255, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #sendBtn:hover, #voiceBtn:hover { 
+            transform: scale(1.1);
+            box-shadow: 0px 0px 12px rgba(0, 247, 255, 0.8);
+        }
+        #sendIcon, #voiceIcon {
+            width: 20px;
+            vertical-align: middle;
+        }
+        .dark-mode {
+            background: linear-gradient(135deg, #000, #111, #333);
+            color: #00f7ff;
+        }
+    </style>
+</head>
+<body>
+    <button id="darkModeToggle" onclick="toggleDarkMode()">🌙</button>
+    <img id="logo" src="chatbot.webp" alt="Chatbot Logo">
+    <h2>Career  Guidance  Chatbot</h2>
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Hello ..🙏..  Ask me about careers...">
+    <button id="sendBtn">
+        <img id="sendIcon" src="send_icon.jpeg" alt="Send">
+    </button>
+    <button id="voiceBtn">
+        <img id="voiceIcon" src="mic_icon.png" alt="Voice Input">
+    </button>
+
+    <script>
+        function toggleDarkMode() {
+            let body = document.body;
+            let toggleBtn = document.getElementById("darkModeToggle");
+            body.classList.toggle('dark-mode');
+            toggleBtn.innerHTML = body.classList.contains('dark-mode') ? '🌞' : '🌙';
+        }
+
+        document.getElementById("sendBtn").addEventListener("click", sendMessage);
+        document.getElementById("voiceBtn").addEventListener("click", startVoiceInput);
+
+        function sendMessage() {
+            let userInput = document.getElementById("userInput").value.trim();
+            let chatbox = document.getElementById("chatbox");
+
+            if (userInput === "") return;
+
+            let userMessage = document.createElement("div");
+            userMessage.classList.add("chat-message", "user-message");
+            userMessage.innerText = "You: " + userInput;
+            chatbox.appendChild(userMessage);
+
+            fetch("http://127.0.0.1:5000/chatbot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let botMessage = document.createElement("div");
+                botMessage.classList.add("chat-message", "bot-message");
+                botMessage.innerText = "Chatbot: " + (data.answer || "Sorry, no response available.");
+                chatbox.appendChild(botMessage);
+            })
+            .catch(() => {
+                let botMessage = document.createElement("div");
+                botMessage.classList.add("chat-message", "bot-message");
+                botMessage.innerText = "Error: Could not connect to chatbot server.";
+                chatbox.appendChild(botMessage);
+            });
+        }
+
+        function startVoiceInput() {
+            let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+            recognition.start();
+            
+            recognition.onresult = function(event) {
+                document.getElementById("userInput").value = event.results[0][0].transcript;
+            };
+        }
+    </script>
+</body>
+</html>
